@@ -49,7 +49,7 @@ os.makedirs('a', exist_ok=True)
 os.makedirs('b', exist_ok=True)
 
 data_lab = []
-L_channel = []
+l_channel = []
 a_channel = []
 b_channel = []
 
@@ -60,20 +60,20 @@ for img in data:
     data_lab.append(img_lab)
 
 for img in data_lab:
-    L, a, b = cv2.split(img)
-    L_channel.append(L)
+    l, a, b = cv2.split(img)
+    l_channel.append(l)
     a_channel.append(a)
     b_channel.append(b)
 
-for i, (L, a, b) in enumerate(zip(L_channel, a_channel, b_channel)):
-    cv2.imwrite(f'L/image_{i}.png', L)
+for i, (l, a, b) in enumerate(zip(l_channel, a_channel, b_channel)):
+    cv2.imwrite(f'L/image_{i}.png', l)
     cv2.imwrite(f'a/image_{i}.png', a)
     cv2.imwrite(f'b/image_{i}.png', b)
 
 cv2.imshow('Image', data[0].numpy().astype('uint8'))
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-cv2.imshow('L', L_channel[0])
+cv2.imshow('L', l_channel[0])
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 cv2.imshow('a', a_channel[0])
