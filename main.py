@@ -16,9 +16,10 @@ def horizontal_flip(img):
 
 def random_crop(img):
     h, w = img.shape[:2]
-    i = random.randint(0, h-128)
-    j = random.randint(0, w-128)
-    return img[i:i+128, j:j+128]
+    crop_size = random.randint(64, 127)
+    i = random.randint(0, h-crop_size)
+    j = random.randint(0, w-crop_size)
+    return img[i:i+crop_size, j:j+crop_size]
 
 def scaling(img):
     factor = random.uniform(0.6, 1.0)
@@ -28,20 +29,32 @@ for f1 in files:
     img = cv2.imread(f1)
     img = cv2.resize(img, (128, 128)) #height and width are both 128
 
-    #data augmentation
-    augmentations = [horizontal_flip, random_crop, scaling]
-    random.shuffle(augmentations)
-    for augmentation in augmentations:
-        img = augmentation(img)
-        data.append(torch.tensor(img))
+    #original image
+    data.append(torch.tensor(img.copy()))
+
+    #data augmentation - 1 group only
+    data.append(torch.tensor(horizontal_flip(img.copy())))
+    data.append(torch.tensor(random_crop(img.copy())))
+    data.append(torch.tensor(scaling(img.copy())))
+
+    #data augmentation - 2 groups
+    data.append(torch.tensor(horizontal_flip(random_crop(img.copy()))))
+    data.append(torch.tensor(horizontal_flip(scaling(img.copy()))))
+    data.append(torch.tensor(scaling(random_crop(img.copy()))))
+
+    #data augmentation - 1 group
+    data.append(torch.tensor(horizontal_flip(scaling(random_crop(img.copy())))))
+
+    #2 groups of random scaling to fill 10x tensor
+    data.append(torch.tensor(scaling(img.copy())))
+    data.append(torch.tensor(scaling(img.copy())))
 
 os.makedirs('augmented', exist_ok=True)
 for i, img in enumerate(data):
     cv2.imwrite(f'augmented/image_{i}.png', img.numpy())
 
 tensor_data = torch.stack(data) #Load your data in a Tensor
-shuffled_data = torch.randperm(tensor_data.size(0)) #randomly shuffle the data using torch.randperm
-new_data = tensor_data[shuffled_data]
+shuffled_data = tensor_data[torch.randperm(tensor_data.size(0))] #randomly shuffle the data using torch.randperm
 
 #L*a*b
 os.makedirs('L', exist_ok=True)
@@ -69,16 +82,3 @@ for i, (l, a, b) in enumerate(zip(l_channel, a_channel, b_channel)):
     cv2.imwrite(f'L/image_{i}.png', l)
     cv2.imwrite(f'a/image_{i}.png', a)
     cv2.imwrite(f'b/image_{i}.png', b)
-
-cv2.imshow('Image', data[0].numpy().astype('uint8'))
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-cv2.imshow('L', l_channel[0])
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-cv2.imshow('a', a_channel[0])
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-cv2.imshow('b', b_channel[0])
-cv2.waitKey(0)
-cv2.destroyAllWindows()
